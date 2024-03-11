@@ -1,4 +1,6 @@
 <!DOCTYPE html>
+
+<html>
 <head>
 	<title>Xlink Pi</title>
 </head>
@@ -6,10 +8,12 @@
 
 	<h1>Xlink Pi</h1>
 	<h3>Wifi Configuration</h3>
+	
 	<?php
 	if (isset($_POST['index'])) header("Location: index.php");
 	if (isset($_POST['refresh'])) $_POST = array();
 	if (isset($_POST['go_back'])) $_POST = array();
+	
 	if (isset($_POST['search_button'])) {
 		$output = shell_exec('sudo python3 /var/www/html/iwlistparse.py');
 		if(empty($output)) {
@@ -28,16 +32,14 @@
 				</tr>';
 			foreach ($networks as $network) {
 				$network = json_decode($network, false);
-				echo $network->bars;
-				echo '<tr>';
-				echo '<td><img src="images/' . $network->signal_bars . 'bars.png"></td>';
-				echo '<td>' . $network->essid . '</td>';
-				echo '<td>' . $network->encryption . '</td>';
-				echo '<td><form method="post" action="wifi.php"><input type="hidden" name="ssid_field" value="' . $network->essid . '"><button type="submit" name="manual_button">Connect</button></form></td>';
-				echo '</tr>';			
+				echo '<tr>
+					  <td><img src="images/' . $network->signal_bars . 'bars.png"></td>
+					  <td>' . $network->essid . '</td>
+					  <td>' . $network->encryption . '</td>
+					  <td><form method="post" action="wifi.php"><input type="hidden" name="ssid_field" value="' . $network->essid . '"><button type="submit" name="manual_button">Connect</button></form></td>
+					  </tr>';			
 			}
-			echo '
-			</table>';
+			echo '</table>';
 		}
 		echo '<br/><form method="post" action="wifi.php"><button type="submit" name="go_back">Go Back</button></form>';
 	} else if (isset($_POST['manual_button']) || isset($_POST['connect_button'])) {
@@ -50,14 +52,14 @@
 			if (strlen(trim($_POST['psk_field'])) < 8 || strlen(trim($_POST['psk_field'])) > 63) $valid_psk = false;
 		}
 		if ($connect && $valid_ssid && $valid_psk) {
-			echo '<img src="images/success.png" alt="Success!"> Network reconfigured! Wifi may take a moment to connect.<br/><br/>';
 			exec ('sudo python3 /var/www/html/configurewifi.py ' . $_POST['ssid_field'] . ' ' . $_POST['psk_field']);
-			echo '<form method="post" action="wifi.php"><button type="submit" name="go_back">Go Back</button></form>';
+			echo '<img src="images/success.png" alt="Success!"> Network reconfigured! Wifi may take a moment to connect.<br/><br/>
+				  <form method="post" action="wifi.php"><button type="submit" name="go_back">Go Back</button></form>';
 		} else {
 			echo '<form method="post" action="wifi.php">
 					  <label for="ssid_field">SSID: </label>
 					  <input type="text" name="ssid_field" value="' . $_POST['ssid_field'] . '"';
-					  if (!isset($_POST['ssid_field']) || $_POST['ssid_field'] == "") echo ' autofocus=""';
+					  if (!isset($_POST['ssid_field']) || empty($_POST['ssid_field'])) echo ' autofocus=""';
 				echo '>
 					  <label for="psk_field">Password: </label>
 					  <input type="password" name="psk_field" value="' . $_POST['psk_field'] . '" autofocus="">
