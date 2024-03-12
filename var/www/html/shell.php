@@ -16,7 +16,7 @@
 	?>
 	
 	<p><img src="images/warning.png"><span style="color:red"> WARNING! This shell runs commands directly on the Pi. Use at your own risk!</span><br/>
-	This shell can accept 'sudo' commands.</p>
+	This shell accepts 'sudo' commands.</p>
 	<form method="post" action="shell.php">
 		<table>
 			<tr>

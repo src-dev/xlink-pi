@@ -26,9 +26,10 @@
 	else {
 		echo '<h3>Status</h3>
 			  <strong>Wifi:&nbsp;&nbsp;</strong>';
-		if (empty(exec('iwgetid -r'))) echo 'No connection';
+		$mac = exec('iwgetid -a -r');
+		if (empty($mac)) echo 'No connection';
 		else {
-			$network = json_decode(exec('python3 iwlistparse.py'), false);
+			$network = json_decode(exec('python3 iwlistparse.py ' . $mac), false);
 			echo 'Connected...&nbsp;&nbsp;<img src="images/' . $network->signal_bars . 'bars.png">&nbsp;&nbsp;' . $network->essid;
 		}
 		echo '<br/><br/><strong>Kai Engine:&nbsp;&nbsp;</strong>';
