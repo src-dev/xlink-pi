@@ -70,10 +70,13 @@
 			if ($_POST['encryption'] == "off") $valid_psk = true;
 		}
 		if ($connect && $valid_psk) {
-			$command = 'sudo python3 confwifi.py "ssid=\"' . $_POST['essid'] . '\""';
-			if ($_POST['encryption'] == "off") $command .= ' "key_mgmt=NONE"';
-			else $command .= ' "psk=\"' . $_POST['psk'] . '\""';
+			$network = array();
+			$network['ssid'] = '"' . $_POST['essid'] . '"';
+			if ($_POST['encryption'] == "off") $network['key_mgmt'] = 'NONE';
+			else $network['psk'] = '"' . $_POST['psk'] . '"';
+			$command = 'sudo python3 confwifi.py w "' . addslashes(json_encode($network)) . '"';
 			exec ($command);
+			exec ('sudo wpa_cli -i wlan0 reconfigure');
 			echo '<img src="images/success.png"> Network reconfigured! Wifi may take a moment to connect.<br/><br/>
 				  <form method="post" action="wifi.php"><button type="submit" name="refresh">Go Back</button></form>';
 		} else {
@@ -123,11 +126,14 @@
 			if (isset($_POST['unsecured'])) $valid_psk = true;
 		}
 		if ($connect && $valid_ssid && $valid_psk) {
-			$command = 'sudo python3 confwifi.py "ssid=\"' . $_POST['essid'] . '\""';
-			if (isset($_POST['unsecured'])) $command .= ' key_mgmt=NONE';
-			else $command .= ' "psk=\"' . $_POST['psk'] . '\""';
-			if (isset($_POST['hidden'])) $command .= ' scan_ssid=1';
+			$network = array();
+			$network['ssid'] = '"' . $_POST['essid'] . '"';
+			if (isset($_POST['unsecured'])) $network['key_mgmt'] = 'NONE';
+			else $network['psk'] = '"' . $_POST['psk'] . '"';
+			if (isset($_POST['hidden'])) $network['scan_ssid'] = '1';
+			$command = 'sudo python3 confwifi.py w "' . addslashes(json_encode($network)) . '"';
 			exec ($command);
+			exec ('sudo wpa_cli -i wlan0 reconfigure');
 			echo '<img src="images/success.png"> Network reconfigured! Wifi may take a moment to connect.<br/><br/>
 				  <form method="post" action="wifi.php"><button type="submit" name="refresh">Go Back</button></form>';
 		} else {
