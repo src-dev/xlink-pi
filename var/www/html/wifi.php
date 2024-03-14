@@ -18,7 +18,7 @@
 	}
 	
 	if (isset($_POST['scan'])) {
-		$output = shell_exec('sudo python3 /var/www/html/iwlistparse.py');
+		$output = shell_exec('sudo python3 /var/www/html/parseiwlist.py');
 		if(empty($output)) {
 			echo '<form method="post" action="wifi.php"><img src="images/warning.png">&nbsp;No networks found!&nbsp;&nbsp;&nbsp;&nbsp;<button type="submit" name="scan">Rescan</button></form>';
 		} else {
@@ -70,8 +70,9 @@
 			if ($_POST['encryption'] == "off") $valid_psk = true;
 		}
 		if ($connect && $valid_psk) {
-			$command = 'sudo python3 configurewifi.py ' . $_POST['essid'];
-			if ($_POST['encryption'] != "off") $command .= ' ' . $_POST['psk'];
+			$command = 'sudo python3 confwifi.py "ssid=\"' . $_POST['essid'] . '\""';
+			if ($_POST['encryption'] == "off") $command .= ' "key_mgmt=NONE"';
+			else $command .= ' "psk=\"' . $_POST['psk'] . '\""';
 			exec ($command);
 			echo '<img src="images/success.png"> Network reconfigured! Wifi may take a moment to connect.<br/><br/>
 				  <form method="post" action="wifi.php"><button type="submit" name="refresh">Go Back</button></form>';
@@ -122,8 +123,9 @@
 			if (isset($_POST['unsecured'])) $valid_psk = true;
 		}
 		if ($connect && $valid_ssid && $valid_psk) {
-			$command = 'sudo python3 configurewifi.py ' . $_POST['essid'];
-			if (!isset($_POST['unsecured'])) $command .= ' ' . $_POST['psk'];
+			$command = 'sudo python3 confwifi.py "ssid=\"' . $_POST['essid'] . '\""';
+			if (isset($_POST['unsecured'])) $command .= ' key_mgmt=NONE';
+			else $command .= ' "psk=\"' . $_POST['psk'] . '\""';
 			exec ($command);
 			echo '<img src="images/success.png"> Network reconfigured! Wifi may take a moment to connect.<br/><br/>
 				  <form method="post" action="wifi.php"><button type="submit" name="refresh">Go Back</button></form>';
@@ -166,7 +168,7 @@
 		$mac = exec('iwgetid -a -r');
 		if (empty($mac)) echo 'No connection';
 		else {
-			$network = json_decode(exec('python3 iwlistparse.py ' . $mac), false);
+			$network = json_decode(exec('python3 parseiwlist.py ' . $mac), false);
 			echo 'Connected...&nbsp;&nbsp;<img src="images/' . $network->signal_bars . 'bars.png">&nbsp;&nbsp;' . $network->essid;
 		}
 		echo '

@@ -29,7 +29,7 @@
 		$mac = exec('iwgetid -a -r');
 		if (empty($mac)) echo 'No connection';
 		else {
-			$network = json_decode(exec('python3 iwlistparse.py ' . $mac), false);
+			$network = json_decode(exec('python3 parseiwlist.py ' . $mac), false);
 			echo 'Connected...&nbsp;&nbsp;<img src="images/' . $network->signal_bars . 'bars.png">&nbsp;&nbsp;' . $network->essid;
 		}
 		echo '<br/><br/><strong>Kai Engine:&nbsp;&nbsp;</strong>';
