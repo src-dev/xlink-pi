@@ -126,6 +126,7 @@
 			$command = 'sudo python3 confwifi.py "ssid=\"' . $_POST['essid'] . '\""';
 			if (isset($_POST['unsecured'])) $command .= ' key_mgmt=NONE';
 			else $command .= ' "psk=\"' . $_POST['psk'] . '\""';
+			if (isset($_POST['hidden'])) $command .= ' scan_ssid=1';
 			exec ($command);
 			echo '<img src="images/success.png"> Network reconfigured! Wifi may take a moment to connect.<br/><br/>
 				  <form method="post" action="wifi.php"><button type="submit" name="refresh">Go Back</button></form>';
@@ -141,10 +142,13 @@
 			if ($_POST['encryption'] == "off") echo ' disabled=""';
 			echo '>
 				<br/><br/>
+				<input type="checkbox" name="hidden">
+				<label for="hidden">Hidden Network</label>
+				&nbsp;&nbsp;&nbsp;&nbsp;
 				<input type="checkbox" name="unsecured" id="unsecured"';
 			if (isset($_POST['unsecured'])) echo ' checked=""';
 			echo '>
-				<label for="unsecured">Unsecured</label>
+				<label for="unsecured">Open (No Password)</label>
 				<br/><br/>
 				<button type="submit" name="manual_connect">Connect</button>
 				<button type="submit" name="refresh">Go Back</button>
