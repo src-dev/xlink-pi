@@ -1,3 +1,14 @@
+<?php
+function moveUp(&$array, $i) {
+	$p1 = array_splice($array, $i, 1);
+	array_splice($array, $i - 1, 0, $p1);
+}
+function moveDown(&$array, $i) {
+	$p1 = array_splice($array, $i, 1);
+	array_splice($array, $i + 1, 0, $p1);
+}
+?>
+
 <!DOCTYPE html>
 
 <html>
@@ -19,9 +30,8 @@
 	
 	if (isset($_POST['scan'])) {
 		$output = shell_exec('sudo python3 /var/www/html/parseiwlist.py');
-		if(empty($output)) {
-			echo '<form method="post" action="wifi.php"><img src="images/warning.png">&nbsp;No networks found!&nbsp;&nbsp;&nbsp;&nbsp;<button type="submit" name="scan">Rescan</button></form>';
-		} else {
+		if(empty($output)) echo '<form method="post" action="wifi.php"><img src="images/warning.png">&nbsp;No networks found!&nbsp;&nbsp;&nbsp;&nbsp;<button type="submit" name="scan">Rescan</button></form>';
+		else {
 			$networks = array_filter(preg_split("(\r\n|\r|\n)", $output));
 			echo '
 			<table cellpadding="5">
@@ -74,10 +84,10 @@
 			$network['ssid'] = '"' . $_POST['essid'] . '"';
 			if ($_POST['encryption'] == "off") $network['key_mgmt'] = 'NONE';
 			else $network['psk'] = '"' . $_POST['psk'] . '"';
-			$command = 'sudo python3 confwifi.py w "' . addslashes(json_encode($network)) . '"';
+			$command = 'sudo python3 confwifi.py a "' . addslashes(json_encode($network)) . '"';
 			exec ($command);
 			exec ('sudo wpa_cli -i wlan0 reconfigure');
-			echo '<img src="images/success.png"> Network reconfigured! Wifi may take a moment to connect.<br/><br/>
+			echo '<img src="images/success.png"> Network configured! Wifi may take a moment to connect.<br/><br/>
 				  <form method="post" action="wifi.php"><button type="submit" name="refresh">Go Back</button></form>';
 		} else {
 			echo '
@@ -131,10 +141,10 @@
 			if (isset($_POST['unsecured'])) $network['key_mgmt'] = 'NONE';
 			else $network['psk'] = '"' . $_POST['psk'] . '"';
 			if (isset($_POST['hidden'])) $network['scan_ssid'] = '1';
-			$command = 'sudo python3 confwifi.py w "' . addslashes(json_encode($network)) . '"';
+			$command = 'sudo python3 confwifi.py a "' . addslashes(json_encode($network)) . '"';
 			exec ($command);
 			exec ('sudo wpa_cli -i wlan0 reconfigure');
-			echo '<img src="images/success.png"> Network reconfigured! Wifi may take a moment to connect.<br/><br/>
+			echo '<img src="images/success.png"> Network configured! Wifi may take a moment to connect.<br/><br/>
 				  <form method="post" action="wifi.php"><button type="submit" name="refresh">Go Back</button></form>';
 		} else {
 			echo '
@@ -171,6 +181,70 @@
 				};
 			</script>';
 		}
+	} else if (isset($_POST['remembered']) || isset($_POST['move_up']) || isset($_POST['move_down']) || isset($_POST['forget']) || isset($_POST['save'])) {
+		$networks = array();
+		$saved = false;
+		if (isset($_POST['remembered'])) $networks = array_filter(preg_split("(\r\n|\r|\n)", shell_exec('sudo python3 /var/www/html/confwifi.py p')));
+		else if (isset($_POST['move_up'])) {
+			$networks = unserialize($_POST['networks']);
+			moveUp($networks, intval($_POST['position']));
+		} else if (isset($_POST['move_down'])) {
+			$networks = unserialize($_POST['networks']);
+			moveDown($networks, intval($_POST['position']));
+		} else if (isset($_POST['forget'])) {
+			$networks = unserialize($_POST['networks']);
+			unset($networks[intval($_POST['position'])]);
+			$networks = array_values($networks);
+		} else if (isset($_POST['save'])) {
+			$networks = unserialize($_POST['networks']);
+			$command = 'sudo python3 /var/www/html/confwifi.py w';
+			foreach ($networks as $network) $command .= ' "' . addslashes($network) . '"';
+			exec($command);
+			$saved = true;
+			exec('sudo wpa_cli -i wlan0 reconfigure');
+		}
+		if (empty($networks)) echo '<form method="post" action="wifi.php"><img src="images/warning.png">&nbsp;No remembered networks found!<br/>';
+		else {
+			echo '
+			<p><strong>Remembered Networks</strong></p>
+			<table cellpadding="5">';
+			foreach ($networks as $network) {
+				$position = array_search($network, $networks);
+				$ssid = substr(json_decode($network, false)->ssid, 1, -1);
+				echo '
+				<tr>
+					<form method="post" action="wifi.php">
+						<input type="hidden" name="position" value="' . $position . '">
+						<input type="hidden" name="networks" value=' . "'" . serialize($networks) . "'" . '>
+						<td>' . $ssid . '</td>		
+						<td';
+				if ($position == 0) echo ' align="right"';
+				echo '>';
+				if ($position != 0) echo '<button type="submit" name="move_up">↑</button>';
+				if ((count($networks) - 1) != $position) echo '<button type="submit" name="move_down">↓</button>';
+				echo '
+						</td>
+						<td>
+							<button type="submit" name="forget">Forget</button>
+						</td>
+					</form>
+				</tr>';			
+			}
+			echo '
+			</table>
+			<br/>
+			<form method="post" action="wifi.php">
+				<input type="hidden" name="networks" value=' . "'" . serialize($networks) . "'" . '>
+				<button type="submit" name="save">Save</button>';
+			if ($saved) echo '&nbsp;&nbsp;<img src="images/success.png"> Networks saved!';
+			echo '
+			</form>';
+		}
+		echo '
+			<br/>
+			<form method="post" action="wifi.php">
+				<button type="submit" name="refresh">Go Back</button>
+			</form>';
 	} else {
 		echo '
 		<form method="post" action="wifi.php">
@@ -186,6 +260,7 @@
 			<br/><br/>
 			<button type="submit" name="scan">Scan</button>
 			<button type="submit" name="manual">Manual</button>
+			<button type="submit" name="remembered">Remembered Networks</button>
 			<br/><br/>
 			<button type="submit" name="index">Go Back</button>
 		</form>';

@@ -25,7 +25,7 @@ def write(args):
 def append(arg):
     with open('/etc/wpa_supplicant/wpa_supplicant.conf', 'r') as file: contents = file.read().split('network=')[0]
     networks = parse()
-    networks.append(json.loads(arg))
+    networks.insert(0, json.loads(arg))
     last = networks[-1]
     for network in networks:
         contents += 'network={\n'
