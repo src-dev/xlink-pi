@@ -235,6 +235,7 @@ function moveDown(&$array, $i) {
 			<br/>
 			<form method="post" action="wifi.php">
 				<input type="hidden" name="networks" value=' . "'" . serialize($networks) . "'" . '>
+				<button type="submit" name="remembered">Reset</button>
 				<button type="submit" name="save">Save</button>';
 			if ($saved) echo '&nbsp;&nbsp;<img src="images/success.png"> Networks saved!';
 			echo '
