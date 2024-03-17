@@ -203,7 +203,7 @@ function moveDown(&$array, $i) {
 			$saved = true;
 			exec('sudo wpa_cli -i wlan0 reconfigure');
 		}
-		if (empty($networks)) echo '<form method="post" action="wifi.php"><img src="images/warning.png">&nbsp;No remembered networks found!<br/>';
+		if (empty($networks)) echo '<img src="images/warning.png">&nbsp;No remembered networks found!<br/>';
 		else {
 			echo '
 			<p><strong>Remembered Networks</strong></p>
