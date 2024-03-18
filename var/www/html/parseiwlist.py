@@ -6,9 +6,9 @@ import sys
 
 # Sets timeout in seconds
 timeout = 30
-timeout += time.time()
 
 #Scan and parse iwlist
+timeout += time.time()
 while True:
     if time.time() > timeout: break
     cells = iwlist.parse(iwlist.scan(interface='wlan0'))
@@ -43,12 +43,11 @@ for cell in cells:
 #Sort networks by signal percentage
 networks = sorted(networks, key=lambda x:x['signal_percentage'], reverse=True)
 
-#Remove 2.4GHz networks in favor of 5GHz
-for network in networks:
-    if network['band'] == 5:
-        for n in networks:
-            if n['essid'] == network['essid'] and n['band'] == 2.4: networks.remove(n)
-
 if len(sys.argv) == 1: 
+    #Remove 2.4GHz networks in favor of 5GHz
+    for network in networks:
+        if network['band'] == 5:
+            for n in networks:
+                if n['essid'] == network['essid'] and n['band'] == 2.4: networks.remove(n)
     for network in networks: print(json.dumps(network))
 elif len(sys.argv) == 2: print(json.dumps(list(filter(lambda x:x['mac'] == sys.argv[1], networks))[0]))
